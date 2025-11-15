@@ -109,13 +109,28 @@ release:
 		exit 1; \
 	fi
 	@if ! git describe --tags --exact-match HEAD >/dev/null 2>&1; then \
-		echo "Error: No git tag found for current commit."; \
+		echo "❌ Error: No git tag found for current commit."; \
 		echo ""; \
-		echo "Create and push a tag first:"; \
-		echo "  git tag -a v0.1.0 -m \"Release v0.1.0\""; \
-		echo "  git push origin v0.1.0"; \
+		echo "📋 To create a release, follow these steps:"; \
 		echo ""; \
-		echo "Or use 'make release-snapshot' to test without a tag."; \
+		echo "1. Check current tags:"; \
+		echo "   git tag -l --sort=-version:refname"; \
+		echo ""; \
+		echo "2. Create a new tag (replace X.Y.Z with your version):"; \
+		echo "   git tag -a vX.Y.Z -m \"Release vX.Y.Z\""; \
+		echo ""; \
+		echo "   Examples:"; \
+		echo "   git tag -a v0.1.0 -m \"Release v0.1.0\"  # First release"; \
+		echo "   git tag -a v0.2.0 -m \"Release v0.2.0\"  # Minor version"; \
+		echo "   git tag -a v1.0.0 -m \"Release v1.0.0\"  # Major version"; \
+		echo ""; \
+		echo "3. Push the tag:"; \
+		echo "   git push origin vX.Y.Z"; \
+		echo ""; \
+		echo "4. Run this command again:"; \
+		echo "   make release"; \
+		echo ""; \
+		echo "💡 Tip: Use 'make release-snapshot' to test without creating a tag."; \
 		exit 1; \
 	fi
 	goreleaser release --clean
@@ -155,6 +170,11 @@ help:
 	@echo "  generate        - Generate all code (mocks and protos)"
 	@echo ""
 	@echo "Release:"
-	@echo "  release         - Create a release using goreleaser (requires tag)"
-	@echo "  release-snapshot - Create a snapshot release for testing"
+	@echo "  release         - Create a release using goreleaser (requires git tag)"
+	@echo "  release-snapshot - Create a snapshot release for testing (no tag needed)"
+	@echo ""
+	@echo "  To create a release:"
+	@echo "    1. git tag -a vX.Y.Z -m \"Release vX.Y.Z\""
+	@echo "    2. git push origin vX.Y.Z"
+	@echo "    3. make release"
 
