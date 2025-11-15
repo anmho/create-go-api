@@ -1,0 +1,45 @@
+version: 2
+
+project_name: create-go-api
+
+builds:
+  - id: create-go-api
+    binary: create-go-api
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/anmho/create-go-api/internal/version.Version={{.Version}}
+      - -X github.com/anmho/create-go-api/internal/version.Commit={{.Commit}}
+      - -X github.com/anmho/create-go-api/internal/version.Date={{.Date}}
+
+archives:
+  - format: tar.gz
+    name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    files:
+      - README.md
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: '{{ .Tag }}-next'
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+
+release:
+  github:
+    owner: anmho
+    name: create-go-api
+  draft: false
+  prerelease: auto

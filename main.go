@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/andrewho/create-go-api/cmd"
+	"github.com/anmho/create-go-api/cmd"
 )
 
 func main() {

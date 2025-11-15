@@ -108,7 +108,6 @@ func (g *Generator) getFileGenerationRules() []fileGenerationRule {
 		rules = append(rules, fileGenerationRule{
 			files: []fileMapping{
 				{"cmd/api/main.go", "templates/cmd/api/main_chi.go.tmpl"},
-				{"internal/api/server.go", "static/internal/api/server_chi.go"},
 				{"internal/posts/routes.go", "static/internal/posts/routes.go"},
 			},
 		})
@@ -116,7 +115,6 @@ func (g *Generator) getFileGenerationRules() []fileGenerationRule {
 		rules = append(rules, fileGenerationRule{
 			files: []fileMapping{
 				{"cmd/api/main.go", "templates/cmd/api/main_connectrpc.go.tmpl"},
-				{"internal/api/server.go", "static/internal/api/server_connectrpc.go"},
 				{"internal/api/posts_handler.go", "static/internal/api/posts_handler_connectrpc.go"},
 				{"internal/posts/converters.go", "templates/internal/posts/converters.go.tmpl"},
 				{"internal/protos/posts/v1/posts.proto", "static/protos/posts/v1/posts.proto"},

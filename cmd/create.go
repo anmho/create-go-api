@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/andrewho/create-go-api/cmd/flags"
-	"github.com/andrewho/create-go-api/internal/generator"
-	"github.com/andrewho/create-go-api/internal/tui"
+	"github.com/anmho/create-go-api/cmd/flags"
+	"github.com/anmho/create-go-api/internal/generator"
+	"github.com/anmho/create-go-api/internal/tui"
 	"github.com/spf13/cobra"
 )
 

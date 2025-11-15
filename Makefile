@@ -1,4 +1,4 @@
-.PHONY: help cli-build cli-run cli-install cli-uninstall test test-all coverage fmt vet lint mocks protos generate
+.PHONY: help cli-build cli-run cli-install cli-uninstall test test-all coverage fmt vet lint mocks protos generate release release-snapshot
 
 # CLI tool commands
 cli-build:
@@ -95,6 +95,40 @@ protos:
 generate: mocks protos
 	@echo "✓ All code generation complete"
 
+# Release using goreleaser
+release:
+	@echo "Creating release with goreleaser..."
+	@command -v goreleaser >/dev/null 2>&1 || { \
+		echo "goreleaser is not installed. Install from https://goreleaser.com/install/"; \
+		exit 1; \
+	}
+	@if [ -z "$$GITHUB_TOKEN" ]; then \
+		echo "Error: GITHUB_TOKEN is not set."; \
+		echo "Set it with: export GITHUB_TOKEN=your_token"; \
+		echo "Get a token from: https://github.com/settings/tokens"; \
+		exit 1; \
+	fi
+	@if ! git describe --tags --exact-match HEAD >/dev/null 2>&1; then \
+		echo "Error: No git tag found for current commit."; \
+		echo ""; \
+		echo "Create and push a tag first:"; \
+		echo "  git tag -a v0.1.0 -m \"Release v0.1.0\""; \
+		echo "  git push origin v0.1.0"; \
+		echo ""; \
+		echo "Or use 'make release-snapshot' to test without a tag."; \
+		exit 1; \
+	fi
+	goreleaser release --clean
+
+# Create a snapshot release (for testing)
+release-snapshot:
+	@echo "Creating snapshot release with goreleaser..."
+	@command -v goreleaser >/dev/null 2>&1 || { \
+		echo "goreleaser is not installed. Install from https://goreleaser.com/install/"; \
+		exit 1; \
+	}
+	goreleaser release --snapshot --clean
+
 # Default target
 help:
 	@echo "Available commands:"
@@ -119,4 +153,8 @@ help:
 	@echo "  mocks           - Generate mocks for testing"
 	@echo "  protos           - Generate protobuf code"
 	@echo "  generate        - Generate all code (mocks and protos)"
+	@echo ""
+	@echo "Release:"
+	@echo "  release         - Create a release using goreleaser (requires tag)"
+	@echo "  release-snapshot - Create a snapshot release for testing"
 

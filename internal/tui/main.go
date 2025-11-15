@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/andrewho/create-go-api/internal/generator"
+	"github.com/anmho/create-go-api/internal/generator"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
