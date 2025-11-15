@@ -1,0 +1,75 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+README.md
+docs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test files
+*_test.go
+coverage.out
+*.test
+
+# Build artifacts
+bin/
+dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Temporary files
+*.tmp
+*.log
+*.out
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.production
+.env.example
+
+# Development files
+docker-compose.yml
+docker-compose.*.yml
+Makefile
+.golangci.yml
+
+# Terraform
+terraform/
+*.tf
+*.tfstate
+*.tfstate.backup
+.terraform/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.circleci/
+
+# Scripts (not needed in Docker image)
+scripts/
+
+# Local development
+wgo.yaml
+atlas.hcl
+
+# Generated files (will be regenerated in container)
+protos/gen/
+internal/posts/mocks/
+
+# Database migrations (if using external migration tool)
+migrations/
+

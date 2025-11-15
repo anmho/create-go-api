@@ -1,0 +1,8 @@
+server:
+  port: '8080'
+  stage: 'local'
+  # Database configuration is loaded from environment variables (see .env.local.example)
+
+metrics:
+  enabled: true
+  path: '/metrics'

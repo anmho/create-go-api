@@ -1,0 +1,8 @@
+server:
+  port: '8080'
+  stage: 'production'
+  # Database configuration is loaded from environment variables
+
+metrics:
+  enabled: true
+  path: '/metrics'
