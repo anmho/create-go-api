@@ -1,0 +1,23 @@
+version: v2
+plugins:
+  # Generate Go protobuf code
+  - remote: buf.build/protocolbuffers/go
+    out: internal/protos/gen
+    opt: paths=source_relative
+
+  # Generate ConnectRPC Go code
+  - remote: buf.build/connectrpc/go
+    out: internal/protos/gen
+    opt:
+      - paths=source_relative
+      - simple
+
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: {{.ModulePath}}/internal/protos/gen
+
+inputs:
+  - directory: internal/protos
+

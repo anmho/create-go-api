@@ -1,0 +1,55 @@
+# {{.ProjectName}}
+
+A Go API service generated with create-go-api.
+
+## Features
+
+- Database: {{.Database.Type}}
+- Framework: {{.Framework}}
+- One-click deployment: {{if .Deploy}}Enabled{{else}}Disabled{{end}}
+
+## Getting Started
+
+1. Start the required services with Docker Compose:
+   ```bash
+   docker-compose up -d
+   ```
+   This will start:
+   - {{if .HasPostgres}}PostgreSQL on port 5432{{end}}{{if .HasDynamoDB}}DynamoDB Local on port 8000{{end}}
+   - Prometheus on port 9090 (for metrics collection)
+   - Grafana on port 3000 (for metrics visualization, default login: admin/admin)
+
+2. Set up your environment variables:
+   ```bash
+   make env-local
+   # Edit .env.local with your configuration
+   ```
+   Or manually:
+   ```bash
+   cp .env.local.example .env.local
+   # Edit .env.local with your configuration
+   ```
+
+3. Run migrations (if using Postgres):
+   ```bash
+   make migrate
+   ```
+
+4. Run the service:
+   ```bash
+   go run cmd/api/main.go
+   ```
+
+## Configuration
+
+The service uses stage-based configuration. Set the `STAGE` environment variable to `local` or `production`.
+
+## Testing
+
+Run tests with:
+```bash
+go test ./...
+```
+
+Database tests use testcontainers to spin up containers automatically.
+

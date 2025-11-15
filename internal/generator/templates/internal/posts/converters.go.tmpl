@@ -1,0 +1,18 @@
+package posts
+
+import (
+	postsv1 "{{.ModulePath}}/internal/protos/gen/posts/v1"
+)
+
+// PostToProto converts a Post to a protobuf Post
+func PostToProto(post *Post) *postsv1.Post {
+	return &postsv1.Post{
+		Id:        post.ID.String(),
+		UserId:    post.UserID.String(),
+		Title:     post.Title,
+		Content:   post.Content,
+		CreatedAt: post.CreatedAt.UnixMilli(),
+		UpdatedAt: post.UpdatedAt.UnixMilli(),
+	}
+}
+

@@ -1,0 +1,77 @@
+.PHONY: help deps build run test{{- if .HasPostgres}} migrate{{- end}} generate{{- if .HasConnectRPC}} publish-proto{{- end}}{{- if .Deploy}} deploy destroy{{- end}} clean
+
+# Default target
+help:
+	@echo "Available commands:"
+	@echo "  deps         - Install all dependencies"
+	@echo "  build        - Build the API server"
+	@echo "  run          - Run the application"
+	@echo "  test         - Run tests"
+{{- if .HasPostgres}}
+	@echo "  migrate      - Generate migration from schema.sql and apply it"
+{{- end}}
+	@echo "  generate     - Generate code{{- if .HasConnectRPC}} (protobuf and mocks){{- else}} (mocks){{- end}}"
+{{- if .Deploy}}
+	@echo "  deploy       - Deploy to Fly.io"
+	@echo "  destroy      - Destroy Fly.io app (permanent, deletes all resources)"
+{{- end}}
+	@echo "  clean        - Clean build artifacts"
+
+# Install dependencies
+deps:
+	@bash scripts/check-deps.sh
+
+# Generate code (protobuf and/or mocks)
+generate: deps
+	@bash scripts/generate.sh
+	@go mod tidy
+
+{{- if .HasConnectRPC}}
+# Publish protobuf package to buf registry
+publish-proto: generate
+	@echo "Publishing protobuf package to buf registry..."
+	@buf push
+	@echo "✓ Protobuf package published"
+{{- end}}
+
+# Build API server
+build: generate
+	@echo "Building API server..."
+	go build -o bin/api cmd/api/main.go
+
+# Run API server (explicitly sets STAGE=local for local development)
+# Usage: make run [STAGE=local|production]
+run: generate
+	STAGE=$${STAGE:-local} go run cmd/api/main.go
+
+# Test
+test:
+	@echo "Running tests..."
+	go test -v ./...
+
+{{- if .HasPostgres}}
+# Generate migration from schema.sql and apply it
+migrate:
+	@PROJECT_NAME={{.ProjectName}} bash scripts/migrate.sh
+
+{{- end}}
+
+{{- if .Deploy}}
+# Deploy to Fly.io (uses fly launch which works for both new and existing apps)
+deploy:
+	@bash scripts/deploy.sh
+
+# Destroy Fly.io app and infrastructure (permanent - deletes app and all resources)
+destroy:
+	@bash scripts/destroy.sh
+
+{{- end}}
+# Clean
+clean:
+	@echo "Cleaning build artifacts..."
+	rm -rf bin/
+{{- if .HasConnectRPC}}
+	rm -rf internal/protos/gen/
+{{- end}}
+	rm -rf internal/posts/mocks/
+

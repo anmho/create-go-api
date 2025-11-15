@@ -1,0 +1,65 @@
+name: Deploy to Fly.io
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+{{- if .HasDynamoDB}}
+  infrastructure:
+    name: Provision Infrastructure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{"{{"}} secrets.AWS_ACCESS_KEY_ID {{"}}"}}
+          aws-secret-access-key: ${{"{{"}} secrets.AWS_SECRET_ACCESS_KEY {{"}}"}}
+          aws-region: ${{"{{"}} secrets.AWS_REGION || 'us-east-1' {{"}}"}}
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: terraform
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        working-directory: terraform
+        run: terraform apply -auto-approve tfplan
+
+  deploy:
+    name: Deploy app
+    runs-on: ubuntu-latest
+    needs: infrastructure
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{"{{"}} secrets.FLY_API_TOKEN {{"}}"}}
+{{- else}}
+  deploy:
+    name: Deploy app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{"{{"}} secrets.FLY_API_TOKEN {{"}}"}}
+{{- end}}
+

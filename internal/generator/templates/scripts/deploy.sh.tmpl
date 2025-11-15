@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e
+
+PROJECT_NAME="{{.ProjectName}}"
+
+if ! command -v flyctl >/dev/null 2>&1 && ! command -v fly >/dev/null 2>&1; then
+    echo "Error: flyctl or fly command not found. Install from https://fly.io/docs/getting-started/installing-flyctl/"
+    exit 1
+fi
+
+FLY_CMD="flyctl"
+if command -v fly >/dev/null 2>&1 && ! command -v flyctl >/dev/null 2>&1; then
+    FLY_CMD="fly"
+fi
+
+# Use fly launch to create and deploy the app (non-interactive, reuse fly.toml)
+# This works for both new apps and existing apps
+$FLY_CMD launch --name "$PROJECT_NAME" --copy-config --yes
+

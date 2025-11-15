@@ -1,0 +1,12 @@
+packages:
+  {{.ModulePath}}/internal/posts:
+    config:
+      dir: "."
+      inpackage: true
+      testonly: true
+    interfaces:
+      PostTable:
+        config:
+          filename: "post_table_mock_test.go"
+          mockname: "MockPostTable"
+

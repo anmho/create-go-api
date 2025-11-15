@@ -1,0 +1,120 @@
+package main
+
+import (
+	"context"
+	"log"
+	"log/slog"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"{{.ModulePath}}/internal/api"
+	"{{.ModulePath}}/internal/config"
+	"{{.ModulePath}}/internal/database"
+	"{{.ModulePath}}/internal/posts"
+	postsv1connect "{{.ModulePath}}/internal/protos/gen/posts/v1/postsv1connect"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
+)
+
+func main() {
+	ctx := context.Background()
+
+	// Load configuration
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalln("failed to load config", err)
+	}
+
+	// Validate configuration
+	if err := cfg.Validate(); err != nil {
+		log.Fatalln("invalid config", err)
+	}
+
+	slog.Info("loaded configuration",
+		"stage", cfg.Server.Stage,
+		"port", cfg.Server.Port,
+	)
+
+	// Initialize database based on configuration
+	var postTable posts.PostTable
+{{- if .HasPostgres}}
+	// PostgreSQL
+	pgPool, err := database.NewPostgres(ctx, cfg.Secrets.DatabaseURL)
+	if err != nil {
+		log.Fatalln("failed to create postgres client", err)
+	}
+	defer pgPool.Close()
+
+	postTable, err = posts.NewPostgresPostTable(ctx, pgPool)
+	if err != nil {
+		log.Fatalln("failed to initialize posts repository:", err)
+	}
+	slog.Info("PostgreSQL connection successful")
+{{- else if .HasDynamoDB}}
+	// DynamoDB
+	opts := []database.DynamoDBOption{
+		database.WithRegion(cfg.Secrets.AWSRegion),
+	}
+	if cfg.Secrets.EndpointURL != "" {
+		opts = append(opts, database.WithEndpoint(cfg.Secrets.EndpointURL))
+	}
+	dynamoClient, err := database.NewDynamoDB(ctx, opts...)
+	if err != nil {
+		log.Fatalln("failed to create dynamo client", err)
+	}
+
+	postTable, err = posts.NewDynamoDBPostTable(ctx, dynamoClient)
+	if err != nil {
+		log.Fatalln("failed to initialize posts repository:", err)
+	}
+	slog.Info("DynamoDB connection successful", "table", cfg.Secrets.TableName)
+{{- end}}
+
+	// Initialize posts service
+	postsService := posts.NewService(postTable)
+
+	// Create HTTP server with h2c for gRPC
+	mux := http.NewServeMux()
+	
+	// Register ConnectRPC handlers
+	postHandler := api.NewPostServiceHandler(postsService)
+	path, grpcHandler := postsv1connect.NewPostServiceHandler(postHandler)
+	mux.Handle(path, grpcHandler)
+	
+	handler := h2c.NewHandler(mux, &http2.Server{})
+
+	srv := &http.Server{
+		Addr:    ":" + cfg.Server.Port,
+		Handler: handler,
+	}
+
+	// Start server in goroutine
+	go func() {
+		slog.Info("starting server", slog.String("port", cfg.Server.Port))
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("server error", slog.Any("error", err))
+			os.Exit(1)
+		}
+	}()
+
+	// Wait for interrupt signal for graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	slog.Info("shutting down server...")
+
+	// Graceful shutdown with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		slog.Error("server forced to shutdown", slog.Any("error", err))
+	}
+
+	slog.Info("server exited")
+}
+
